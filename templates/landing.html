@@ -67,30 +67,12 @@
         <h2 class="modal-title" id="how-it-works-title">How Spendly works</h2>
         <button type="button" class="modal-close" id="how-it-works-close" aria-label="Close">&times;</button>
     </div>
-    <ol class="modal-steps">
-        <li class="modal-step">
-            <span class="modal-step-num">1</span>
-            <div>
-                <h3>Create your free account</h3>
-                <p>Sign up in seconds — no credit card needed.</p>
-            </div>
-        </li>
-        <li class="modal-step">
-            <span class="modal-step-num">2</span>
-            <div>
-                <h3>Log your expenses</h3>
-                <p>Add an amount, category, date and note whenever you spend.</p>
-            </div>
-        </li>
-        <li class="modal-step">
-            <span class="modal-step-num">3</span>
-            <div>
-                <h3>See where it goes</h3>
-                <p>Review category breakdowns and monthly summaries to stay on budget.</p>
-            </div>
-        </li>
-    </ol>
-    <a href="{{ url_for('register') }}" class="hero-btn modal-cta">Create free account</a>
+    <div class="modal-video">
+        <iframe id="how-it-works-video"
+                title="How Spendly works"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+    </div>
 </dialog>
 
 <section class="features">
@@ -126,8 +108,14 @@
 {% block scripts %}
 <script>
     (function () {
+        // Placeholder video — replace with the real YouTube embed URL
+        var VIDEO_URL = 'https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&rel=0';
+
         var modal = document.getElementById('how-it-works-modal');
+        var video = document.getElementById('how-it-works-video');
+
         document.getElementById('how-it-works-btn').addEventListener('click', function () {
+            video.src = VIDEO_URL;
             modal.showModal();
         });
         document.getElementById('how-it-works-close').addEventListener('click', function () {
@@ -135,6 +123,11 @@
         });
         modal.addEventListener('click', function (e) {
             if (e.target === modal) modal.close();
+        });
+        // Fires for every way of closing (button, backdrop, Esc); removing the
+        // src unloads the iframe so the video stops playing.
+        modal.addEventListener('close', function () {
+            video.src = '';
         });
     })();
 </script>
