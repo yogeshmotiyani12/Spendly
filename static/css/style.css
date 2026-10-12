@@ -576,3 +576,10 @@ a { color: inherit; text-decoration: none; }
     .legal-section { padding: 2rem 1rem 3rem; }
     .legal-card { padding: 1.5rem; }
 }
+
+.legal-link {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.legal-link:hover { text-decoration: underline; }
