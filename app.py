@@ -1,10 +1,16 @@
+import os
 import re
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, session, url_for
 
-from database.db import create_user, init_db, seed_db
+from database.db import authenticate_user, create_user, init_db, seed_db
 
 app = Flask(__name__)
+# The fallback key is for local development only. Set SECRET_KEY in the
+# environment for anything else, and enable SESSION_COOKIE_SECURE once the app
+# is served over https.
+app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 _EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 
@@ -35,6 +41,9 @@ def _validate_registration(name, email, password):
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
     if request.method == "GET":
         return render_template("register.html")
 
@@ -51,11 +60,43 @@ def register():
     return render_template("register.html", error=error, name=name, email=email)
 
 
-@app.route("/login")
+def _validate_login(email, password):
+    """Return an error message if either field is empty, or None."""
+    if not email or not password:
+        return "Please enter your email and password."
+    return None
+
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template(
-        "login.html", registered=request.args.get("registered") == "1"
-    )
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
+    if request.method == "GET":
+        return render_template(
+            "login.html", registered=request.args.get("registered") == "1"
+        )
+
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    error = _validate_login(email, password)
+    if error is None:
+        user = authenticate_user(email, password)
+        if user is not None:
+            session.clear()
+            session["user_id"] = user["id"]
+            session["user_name"] = user["name"]
+            return redirect(url_for("landing"))
+        error = "Invalid email or password."
+
+    return render_template("login.html", error=error, email=email)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("landing"))
 
 
 @app.route("/terms")
@@ -71,11 +112,6 @@ def privacy():
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/logout")
-def logout():
-    return "Logout — coming in Step 3"
-
 
 @app.route("/profile")
 def profile():

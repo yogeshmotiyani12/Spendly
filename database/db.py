@@ -2,12 +2,16 @@ import os
 import sqlite3
 from datetime import date
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "expense_tracker.db",
 )
+
+# Checked against when a login email is unknown, so that path costs the same
+# as a wrong-password one.
+_DUMMY_PASSWORD_HASH = generate_password_hash("not-a-real-password", method="pbkdf2:sha256")
 
 
 def get_db():
@@ -106,3 +110,24 @@ def create_user(name, email, password):
         return None
     finally:
         conn.close()
+
+
+def authenticate_user(email, password):
+    """Return the user row (id, name, password_hash) for valid credentials, else None.
+
+    Unknown email and wrong password both return None. `email` must already be
+    normalized (stripped, lowercased) by the caller.
+    """
+    conn = get_db()
+    try:
+        user = conn.execute(
+            "SELECT id, name, password_hash FROM users WHERE email = ?",
+            (email,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    password_hash = user["password_hash"] if user else _DUMMY_PASSWORD_HASH
+    if check_password_hash(password_hash, password) and user is not None:
+        return user
+    return None
