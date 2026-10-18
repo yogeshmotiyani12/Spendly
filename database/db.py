@@ -88,3 +88,21 @@ def seed_db():
         conn.commit()
     finally:
         conn.close()
+
+
+def create_user(name, email, password):
+    """Insert a new user and return its id, or None if the email is taken."""
+    password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+            (name, email, password_hash),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        return None
+    finally:
+        conn.close()
