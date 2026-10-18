@@ -11,7 +11,7 @@ Spendly is a lightweight personal expense tracker built with Flask and SQLite.
 spendly/
 ├── app.py              # All routes — single file, no blueprints
 ├── database/
-│   └── db.py           # SQLite helpers: get_db(), init_db(), seed_db()
+│   └── db.py           # SQLite helpers: get_db(), init_db(), seed_db(), create_user()
 ├── templates/
 │   ├── base.html       # Shared layout — all templates must extend this
 │   └── *.html          # One template per page
@@ -21,6 +21,10 @@ spendly/
 │   │   └── landing.css     # Landing-page-only styles
 │   └── js/
 │       └── main.js         # Vanilla JS only
+├── tests/
+│   ├── conftest.py     # `app` fixture — patches DB_PATH to a temp DB before importing app
+│   └── test_*.py       # pytest-flask tests
+├── pytest.ini          # pythonpath = . so plain `pytest` can import app and database.db
 └── requirements.txt
 ```
 
@@ -94,7 +98,8 @@ pytest -s
 |---|---|
 | `GET /` | Implemented — renders `landing.html` |
 | `GET /register` | Implemented — renders `register.html` |
-| `GET /login` | Implemented — renders `login.html` |
+| `POST /register` | Implemented — validates, calls `create_user()`, redirects to `/login?registered=1` |
+| `GET /login` | Implemented — renders `login.html` (shows a notice when `?registered=1`) |
 | `GET /logout` | Stub — Step 3 |
 | `GET /profile` | Stub — Step 4 |
 | `GET /expenses/add` | Stub — Step 7 |
@@ -112,6 +117,6 @@ pytest -s
 - **Never put DB logic in route functions** — it belongs in `database/db.py`
 - **Never install new packages** mid-feature without flagging it — keep `requirements.txt` in sync
 - **Never use JS frameworks** — the frontend is intentionally vanilla
-- **`database/db.py` provides `get_db()`, `init_db()`, `seed_db()`** — DB file is `expense_tracker.db` in the project root (gitignored); `app.py` runs `init_db()` and `seed_db()` on startup
+- **`database/db.py` provides `get_db()`, `init_db()`, `seed_db()`, `create_user()`** — DB file is `expense_tracker.db` in the project root (gitignored); `app.py` runs `init_db()` and `seed_db()` on startup
 - **FK enforcement is manual** — SQLite foreign keys are off by default; `get_db()` must run `PRAGMA foreign_keys = ON` on every connection
 - The app runs on **port 5001**, not the Flask default 5000 — don't change this

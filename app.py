@@ -1,8 +1,12 @@
-from flask import Flask, render_template
+import re
 
-from database.db import init_db, seed_db
+from flask import Flask, redirect, render_template, request, url_for
+
+from database.db import create_user, init_db, seed_db
 
 app = Flask(__name__)
+
+_EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 
 with app.app_context():
     init_db()
@@ -18,14 +22,40 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+def _validate_registration(name, email, password):
+    """Return the first validation error message, or None if the input is valid."""
+    if not name:
+        return "Please enter your name."
+    if not _EMAIL_RE.fullmatch(email):
+        return "Please enter a valid email address."
+    if len(password) < 8:
+        return "Password must be at least 8 characters."
+    return None
+
+
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    error = _validate_registration(name, email, password)
+    if error is None:
+        if create_user(name, email, password) is not None:
+            return redirect(url_for("login", registered=1))
+        error = "An account with that email already exists."
+
+    return render_template("register.html", error=error, name=name, email=email)
 
 
 @app.route("/login")
 def login():
-    return render_template("login.html")
+    return render_template(
+        "login.html", registered=request.args.get("registered") == "1"
+    )
 
 
 @app.route("/terms")
