@@ -2,7 +2,7 @@
 
 ## Overview
 
-Make the existing `/register` page actually create accounts. Today `GET /register` only renders `register.html`; the form posts to a route that accepts no POST, so no user can be created except the seeded demo user. This step adds the POST handler: validate the submitted name, email and password, hash the password with werkzeug, insert the user into the `users` table, and send the visitor to the login page. It is the first write path through the data layer built in Step 1 and the prerequisite for login (Step 3), since login needs real accounts to authenticate against. It deliberately does **not** log the user in — sessions do not exist until Step 3.
+Make the existing `/register` page actually create accounts. Today `GET /register` only renders `register.html`; the form posts to a route that accepts no POST, so no user can be created except the seeded demo user. This step adds the POST handler: validate the submitted name, email and password, hash the password with werkzeug, insert the user into the `users` table, and redirect the user to the login page with a success message. It is the first write path through the data layer built in Step 1 and the prerequisite for login (Step 3), since login needs real accounts to authenticate against. It deliberately does **not** log the user in — sessions do not exist until Step 3.
 
 ## Depends on
 
