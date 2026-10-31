@@ -244,7 +244,6 @@ def test_page_routes_still_render(client, path):
 @pytest.mark.parametrize(
     "path, text",
     [
-        ("/profile", "coming in Step 4"),
         ("/expenses/add", "coming in Step 7"),
         ("/expenses/1/edit", "coming in Step 8"),
         ("/expenses/1/delete", "coming in Step 9"),

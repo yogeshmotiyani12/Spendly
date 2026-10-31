@@ -98,11 +98,11 @@ def test_login_page_still_shows_registered_notice(client):
 # POST /login — success                                               #
 # ------------------------------------------------------------------ #
 
-def test_login_redirects_to_landing(client):
+def test_login_redirects_to_profile(client):
     response = _login(client)
 
     assert response.status_code == 302
-    assert _location_path(response) == url_for("landing")
+    assert _location_path(response) == url_for("profile")
 
 
 def test_login_stores_only_id_and_name_in_session(client):
@@ -171,7 +171,7 @@ def test_login_ignores_next_parameter(client):
     )
 
     assert response.status_code == 302
-    assert _location_path(response) == url_for("landing")
+    assert _location_path(response) == url_for("profile")
     assert "evil" not in response.headers["Location"]
 
 
@@ -308,12 +308,12 @@ def test_signed_out_navbar_shows_sign_in_links(client):
     ],
     ids=["login", "login-registered", "register"],
 )
-def test_signed_in_get_redirects_to_landing(client, endpoint, values):
+def test_signed_in_get_redirects_to_profile(client, endpoint, values):
     _login(client)
     response = client.get(url_for(endpoint, **values))
 
     assert response.status_code == 302
-    assert _location_path(response) == url_for("landing")
+    assert _location_path(response) == url_for("profile")
 
 
 def test_signed_in_post_login_is_redirected_and_session_unchanged(client):
@@ -323,7 +323,7 @@ def test_signed_in_post_login_is_redirected_and_session_unchanged(client):
     response = _login(client, email="nobody@example.com", password="wrong-password")
 
     assert response.status_code == 302
-    assert _location_path(response) == url_for("landing")
+    assert _location_path(response) == url_for("profile")
     assert _session(client) == before
 
 
@@ -334,7 +334,7 @@ def test_signed_in_post_register_creates_no_user(client):
     response = _register(client, "Bob Example", "bob@example.com", "correct-horse")
 
     assert response.status_code == 302
-    assert _location_path(response) == url_for("landing")
+    assert _location_path(response) == url_for("profile")
     assert _count_users() == before
 
 

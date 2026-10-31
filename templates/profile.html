@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="profile-container">
+
+        <section class="profile-card profile-user" aria-labelledby="profile-name">
+            <div class="profile-avatar" aria-hidden="true">{{ user.name.split()[:2]|map('first')|join|upper }}</div>
+            <div class="profile-user-details">
+                <h1 class="profile-name" id="profile-name">{{ user.name }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+                <p class="profile-since">Member since {{ user.member_since|format_date("%B %Y") }}</p>
+            </div>
+        </section>
+
+        <dl class="profile-stats" aria-label="Spending summary">
+            <div class="profile-stat">
+                <dt class="profile-stat-label">Total spent</dt>
+                <dd class="profile-stat-value">{{ stats.total|rupees }}</dd>
+            </div>
+            <div class="profile-stat">
+                <dt class="profile-stat-label">Transactions</dt>
+                <dd class="profile-stat-value">{{ stats.count }}</dd>
+            </div>
+            <div class="profile-stat">
+                <dt class="profile-stat-label">Top category</dt>
+                <dd class="profile-stat-value">{{ stats.top_category }}</dd>
+            </div>
+        </dl>
+
+        <div class="profile-grid">
+
+            <section class="profile-card profile-panel" aria-labelledby="history-title">
+                <h2 class="profile-panel-title" id="history-title">Recent transactions</h2>
+                <div class="profile-table-wrap" role="region" tabindex="0" aria-label="Transactions, scrollable">
+                    <table class="profile-table" aria-labelledby="history-title">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Category</th>
+                                <th scope="col" class="profile-num">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr>
+                                <td><time datetime="{{ t.date }}">{{ t.date|format_date }}</time></td>
+                                <td>{{ t.description or "—" }}</td>
+                                <td><span class="category-badge category-badge-{{ t.category|lower|replace(' ', '-') }}">{{ t.category }}</span></td>
+                                <td class="profile-num">{{ t.amount|rupees }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="profile-card profile-panel" aria-labelledby="breakdown-title">
+                <h2 class="profile-panel-title" id="breakdown-title">Spending by category</h2>
+                <ul class="profile-breakdown">
+                    {% for c in categories %}
+                    <li class="profile-breakdown-row">
+                        <div class="profile-breakdown-head">
+                            <span class="category-badge category-badge-{{ c.name|lower|replace(' ', '-') }}">{{ c.name }}</span>
+                            <span class="profile-breakdown-amount">{{ c.total|rupees }}
+                                <span class="profile-breakdown-percent">{{ c.percent }}%</span>
+                            </span>
+                        </div>
+                        <progress class="profile-meter" value="{{ c.percent }}" max="100" aria-label="{{ c.name }} share of total spending">{{ c.percent }}%</progress>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 
@@ -17,6 +18,20 @@ _EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 with app.app_context():
     init_db()
     seed_db()
+
+
+# ------------------------------------------------------------------ #
+# Template filters                                                    #
+# ------------------------------------------------------------------ #
+
+@app.template_filter("rupees")
+def rupees(amount):
+    return f"₹{amount:,.2f}"
+
+
+@app.template_filter("format_date")
+def format_date(value, fmt="%d %b %Y"):
+    return datetime.fromisoformat(value).strftime(fmt)
 
 
 # ------------------------------------------------------------------ #
@@ -42,7 +57,7 @@ def _validate_registration(name, email, password):
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "GET":
         return render_template("register.html")
@@ -70,7 +85,7 @@ def _validate_login(email, password):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "GET":
         return render_template(
@@ -87,7 +102,7 @@ def login():
             session.clear()
             session["user_id"] = user["id"]
             session["user_name"] = user["name"]
-            return redirect(url_for("landing"))
+            return redirect(url_for("profile"))
         error = "Invalid email or password."
 
     return render_template("login.html", error=error, email=email)
@@ -109,14 +124,69 @@ def privacy():
     return render_template("privacy.html")
 
 
-# ------------------------------------------------------------------ #
-# Placeholder routes — students will implement these                  #
-# ------------------------------------------------------------------ #
+# Hardcoded placeholder data for the profile page until Step 5 reads it from the
+# database. The card shows this user whoever is signed in. Rows have the shape
+# of an `expenses` row and mirror the demo seed data.
+_DEMO_USER = {
+    "name": "Demo User",
+    "email": "demo@spendly.com",
+    "member_since": "2026-01-15",
+}
+
+_DEMO_TRANSACTIONS = [  # newest first
+    {"date": "2026-10-08", "description": None, "category": "Food", "amount": 27.40},
+    {"date": "2026-10-07", "description": None, "category": "Other", "amount": 9.00},
+    {"date": "2026-10-06", "description": "New shirt", "category": "Shopping", "amount": 64.75},
+    {"date": "2026-10-05", "description": "Movie ticket", "category": "Entertainment", "amount": 18.99},
+    {"date": "2026-10-04", "description": "Pharmacy", "category": "Health", "amount": 30.00},
+    {"date": "2026-10-03", "description": "Electricity bill", "category": "Bills", "amount": 120.00},
+    {"date": "2026-10-02", "description": "Monthly bus pass top-up", "category": "Transport", "amount": 45.00},
+    {"date": "2026-10-01", "description": "Lunch at cafe", "category": "Food", "amount": 12.50},
+]
+
+
+def _demo_profile_context():
+    """Build the profile template context from the hardcoded rows.
+
+    Stats and the breakdown are derived so they cannot drift from the table.
+    """
+    total = round(sum(t["amount"] for t in _DEMO_TRANSACTIONS), 2)
+
+    totals_by_category = {}
+    for t in _DEMO_TRANSACTIONS:
+        totals_by_category[t["category"]] = (
+            totals_by_category.get(t["category"], 0) + t["amount"]
+        )
+
+    categories = [
+        {"name": name, "total": round(amount, 2), "percent": round(amount / total * 100, 1)}
+        for name, amount in sorted(
+            totals_by_category.items(), key=lambda item: item[1], reverse=True
+        )
+    ]
+
+    return {
+        "user": _DEMO_USER,
+        "stats": {
+            "total": total,
+            "count": len(_DEMO_TRANSACTIONS),
+            "top_category": categories[0]["name"],
+        },
+        "transactions": _DEMO_TRANSACTIONS,
+        "categories": categories,
+    }
+
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    return render_template("profile.html", **_demo_profile_context())
 
+
+# ------------------------------------------------------------------ #
+# Placeholder routes — students will implement these                  #
+# ------------------------------------------------------------------ #
 
 @app.route("/expenses/add")
 def add_expense():
