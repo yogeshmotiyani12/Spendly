@@ -1,0 +1,271 @@
+/* Profile page only — loaded through {% block head %} in profile.html.
+   Colours come from the variables defined in style.css. */
+
+/* ------------------------------------------------------------------ */
+/* Layout                                                              */
+/* ------------------------------------------------------------------ */
+
+.profile-section { padding: 3rem 2rem 4rem; }
+
+.profile-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.profile-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+}
+
+.profile-panel-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.35rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* User card                                                           */
+/* ------------------------------------------------------------------ */
+
+.profile-user {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper-card);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-user-details { min-width: 0; }
+
+.profile-name {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.75rem;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
+.profile-email,
+.profile-since {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ */
+/* Summary stats                                                       */
+/* ------------------------------------------------------------------ */
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.profile-stat {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.profile-stat-label {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+}
+
+.profile-stat-value {
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* Transactions table                                                  */
+/* ------------------------------------------------------------------ */
+
+.profile-table-wrap { overflow-x: auto; }
+
+.profile-table-wrap:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.profile-table {
+    width: 100%;
+    min-width: 30rem;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.profile-table th {
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 0 0.75rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink-soft);
+    vertical-align: middle;
+}
+
+.profile-table tbody tr:last-child td { border-bottom: 0; }
+
+.profile-table th.profile-num,
+.profile-table td.profile-num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* Category badges                                                     */
+/* ------------------------------------------------------------------ */
+
+.category-badge {
+    display: inline-block;
+    padding: 0.15rem 0.65rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.category-badge-transport,
+.category-badge-health {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.category-badge-food,
+.category-badge-shopping {
+    background: var(--accent-2-light);
+    border-color: var(--accent-2);
+    color: var(--ink-soft);
+}
+
+.category-badge-bills {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* ------------------------------------------------------------------ */
+/* Category breakdown                                                  */
+/* ------------------------------------------------------------------ */
+
+.profile-breakdown {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.profile-breakdown-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+
+.profile-breakdown-amount {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-breakdown-percent {
+    margin-left: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--ink-muted);
+}
+
+/* Native <progress>: the width comes from the value attribute, so no inline
+   style is needed. The vendor pseudo-elements must stay in separate rules —
+   a selector list with an unknown pseudo-element is dropped entirely. */
+
+.profile-meter {
+    display: block;
+    width: 100%;
+    height: 0.5rem;
+    border: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--paper-warm);
+}
+
+.profile-meter::-webkit-progress-bar {
+    background: var(--paper-warm);
+}
+
+.profile-meter::-webkit-progress-value {
+    background: var(--accent);
+    border-radius: 999px;
+}
+
+.profile-meter::-moz-progress-bar {
+    background: var(--accent);
+    border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+    .profile-grid { grid-template-columns: minmax(0, 1fr); }
+    .profile-stat-value { font-size: 1.5rem; }
+}
+
+@media (max-width: 600px) {
+    .profile-section { padding: 2rem 1rem 3rem; }
+    .profile-stats { grid-template-columns: minmax(0, 1fr); }
+    .profile-card { padding: 1.25rem; }
+    .profile-user { gap: 1rem; }
+    .profile-avatar { width: 3rem; height: 3rem; font-size: 1.15rem; }
+    .profile-name { font-size: 1.5rem; }
+}
