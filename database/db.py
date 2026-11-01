@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -131,3 +131,108 @@ def authenticate_user(email, password):
     if check_password_hash(password_hash, password) and user is not None:
         return user
     return None
+
+
+def get_user_by_id(user_id):
+    """Return {"name", "email", "member_since"} for a user, or None if not found.
+
+    `member_since` comes from users.created_at, formatted "Month YYYY".
+    """
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT name, email, created_at FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        return None
+
+    created_at = row["created_at"]
+    member_since = (
+        datetime.fromisoformat(created_at).strftime("%B %Y") if created_at else "—"
+    )
+    return {"name": row["name"], "email": row["email"], "member_since": member_since}
+
+
+def get_recent_transactions(user_id, limit=10):
+    """Return up to `limit` of the user's expenses, newest first.
+
+    Each item is {"date", "description", "category", "amount"}; description may
+    be None. A user with no expenses gets an empty list.
+    """
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT date, description, category, amount FROM expenses "
+            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_summary_stats(user_id):
+    """Return {"total_spent", "transaction_count", "top_category"} for all of a
+    user's expenses.
+
+    top_category is the category with the highest total (ties: name ascending).
+    A user with no expenses gets zeros and "—" rather than an error.
+    """
+    conn = get_db()
+    try:
+        count, total = conn.execute(
+            "SELECT COUNT(*), COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        top = conn.execute(
+            "SELECT category FROM expenses WHERE user_id = ? "
+            "GROUP BY category ORDER BY ROUND(SUM(amount), 2) DESC, category ASC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if count == 0:
+        return {"total_spent": 0, "transaction_count": 0, "top_category": "—"}
+    return {
+        "total_spent": round(total, 2),
+        "transaction_count": count,
+        "top_category": top["category"],
+    }
+
+
+def get_category_breakdown(user_id):
+    """Return [{"name", "amount", "pct"}] for a user, largest category first.
+
+    `pct` is a whole number and the values always sum to exactly 100: the
+    largest category absorbs any rounding remainder. No expenses -> [].
+    """
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT category, ROUND(SUM(amount), 2) AS total FROM expenses "
+            "WHERE user_id = ? GROUP BY category "
+            "ORDER BY ROUND(SUM(amount), 2) DESC, category ASC",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    grand_total = sum(row["total"] for row in rows)
+    if grand_total <= 0:
+        return []
+
+    breakdown = [
+        {
+            "name": row["category"],
+            "amount": row["total"],
+            "pct": round(row["total"] / grand_total * 100),
+        }
+        for row in rows
+    ]
+    breakdown[0]["pct"] += 100 - sum(item["pct"] for item in breakdown)
+    return breakdown

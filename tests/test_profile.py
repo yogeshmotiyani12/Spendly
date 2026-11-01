@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -126,7 +127,8 @@ def test_profile_shows_user_info_card(client):
     assert avatar.group(1).strip() == "DU"
     assert heading.group(1).strip() == "Demo User"
     assert 'class="profile-email">demo@spendly.com<' in html
-    assert "Member since January 2026" in html
+    # users.created_at defaults to SQLite's datetime('now'), which is UTC.
+    assert f"Member since {datetime.now(timezone.utc).strftime('%B %Y')}" in html
 
 
 # ------------------------------------------------------------------ #
@@ -226,16 +228,19 @@ def test_profile_breakdown_values_are_consistent(client):
     breakdown = _breakdown(_profile(client))
 
     meters = re.findall(
-        r'<progress class="profile-meter" value="([\d.]+)" max="100" aria-label="([^"]+)"',
+        r'<progress class="profile-meter" value="(\d+)" max="100" aria-label="([^"]+)"',
         breakdown,
     )
     totals = [
         _amount(m)
         for m in re.findall(r'profile-breakdown-amount">\s*₹([\d,]+\.\d{2})', breakdown)
     ]
+    percents = [int(value) for value, _ in meters]
 
     assert len(meters) == len(CATEGORY_SLUGS)
-    assert sum(float(value) for value, _ in meters) == pytest.approx(100, abs=0.5)
+    # Whole-number percentages; Bills absorbs the rounding remainder (101 -> 100).
+    assert percents == [36, 20, 14, 12, 9, 6, 3]
+    assert sum(percents) == 100
     assert sum(totals) == pytest.approx(327.64)
 
 

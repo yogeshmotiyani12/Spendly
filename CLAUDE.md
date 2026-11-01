@@ -11,7 +11,7 @@ Spendly is a lightweight personal expense tracker built with Flask and SQLite.
 spendly/
 ├── app.py              # All routes — single file, no blueprints
 ├── database/
-│   └── db.py           # SQLite helpers: get_db(), init_db(), seed_db(), create_user(), authenticate_user()
+│   └── db.py           # SQLite helpers: get_db(), init_db(), seed_db(), create_user(), authenticate_user(), get_user_by_id(), get_summary_stats(), get_recent_transactions(), get_category_breakdown()
 ├── templates/
 │   ├── base.html       # Shared layout — all templates must extend this
 │   └── *.html          # One template per page
@@ -102,7 +102,7 @@ pytest -s
 | `GET /login` | Implemented — renders `login.html` (shows a notice when `?registered=1`; signed-in visitors are redirected to `/profile`) |
 | `POST /login` | Implemented — validates, calls `authenticate_user()`, starts the session, redirects to `/profile` |
 | `GET /logout` | Implemented — clears the session, redirects to `/` |
-| `GET /profile` | Implemented — login-protected (signed-out visitors are redirected to `/login`); renders `profile.html` with hardcoded demo data until Step 5 |
+| `GET /profile` | Implemented — login-protected (signed-out visitors are redirected to `/login`); renders `profile.html` with the signed-in user's live data (user info, summary stats, latest 10 transactions, category breakdown); a stale session (deleted user) is cleared and redirected to `/login` |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
@@ -118,6 +118,6 @@ pytest -s
 - **Never put DB logic in route functions** — it belongs in `database/db.py`
 - **Never install new packages** mid-feature without flagging it — keep `requirements.txt` in sync
 - **Never use JS frameworks** — the frontend is intentionally vanilla
-- **`database/db.py` provides `get_db()`, `init_db()`, `seed_db()`, `create_user()`, `authenticate_user()`** — DB file is `expense_tracker.db` in the project root (gitignored); `app.py` runs `init_db()` and `seed_db()` on startup
+- **`database/db.py` provides `get_db()`, `init_db()`, `seed_db()`, `create_user()`, `authenticate_user()`, `get_user_by_id()`, `get_summary_stats()`, `get_recent_transactions()`, `get_category_breakdown()`** — DB file is `expense_tracker.db` in the project root (gitignored); `app.py` runs `init_db()` and `seed_db()` on startup
 - **FK enforcement is manual** — SQLite foreign keys are off by default; `get_db()` must run `PRAGMA foreign_keys = ON` on every connection
 - The app runs on **port 5001**, not the Flask default 5000 — don't change this
