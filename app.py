@@ -4,7 +4,16 @@ from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 
-from database.db import authenticate_user, create_user, init_db, seed_db
+from database.db import (
+    authenticate_user,
+    create_user,
+    get_category_breakdown,
+    get_recent_transactions,
+    get_summary_stats,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
 # The fallback key is for local development only. Set SECRET_KEY in the
@@ -124,64 +133,24 @@ def privacy():
     return render_template("privacy.html")
 
 
-# Hardcoded placeholder data for the profile page until Step 5 reads it from the
-# database. The card shows this user whoever is signed in. Rows have the shape
-# of an `expenses` row and mirror the demo seed data.
-_DEMO_USER = {
-    "name": "Demo User",
-    "email": "demo@spendly.com",
-    "member_since": "2026-01-15",
-}
-
-_DEMO_TRANSACTIONS = [  # newest first
-    {"date": "2026-10-08", "description": None, "category": "Food", "amount": 27.40},
-    {"date": "2026-10-07", "description": None, "category": "Other", "amount": 9.00},
-    {"date": "2026-10-06", "description": "New shirt", "category": "Shopping", "amount": 64.75},
-    {"date": "2026-10-05", "description": "Movie ticket", "category": "Entertainment", "amount": 18.99},
-    {"date": "2026-10-04", "description": "Pharmacy", "category": "Health", "amount": 30.00},
-    {"date": "2026-10-03", "description": "Electricity bill", "category": "Bills", "amount": 120.00},
-    {"date": "2026-10-02", "description": "Monthly bus pass top-up", "category": "Transport", "amount": 45.00},
-    {"date": "2026-10-01", "description": "Lunch at cafe", "category": "Food", "amount": 12.50},
-]
-
-
-def _demo_profile_context():
-    """Build the profile template context from the hardcoded rows.
-
-    Stats and the breakdown are derived so they cannot drift from the table.
-    """
-    total = round(sum(t["amount"] for t in _DEMO_TRANSACTIONS), 2)
-
-    totals_by_category = {}
-    for t in _DEMO_TRANSACTIONS:
-        totals_by_category[t["category"]] = (
-            totals_by_category.get(t["category"], 0) + t["amount"]
-        )
-
-    categories = [
-        {"name": name, "total": round(amount, 2), "percent": round(amount / total * 100, 1)}
-        for name, amount in sorted(
-            totals_by_category.items(), key=lambda item: item[1], reverse=True
-        )
-    ]
-
-    return {
-        "user": _DEMO_USER,
-        "stats": {
-            "total": total,
-            "count": len(_DEMO_TRANSACTIONS),
-            "top_category": categories[0]["name"],
-        },
-        "transactions": _DEMO_TRANSACTIONS,
-        "categories": categories,
-    }
-
-
 @app.route("/profile")
 def profile():
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+    if not user_id:
         return redirect(url_for("login"))
-    return render_template("profile.html", **_demo_profile_context())
+
+    user = get_user_by_id(user_id)
+    if user is None:  # stale session: the account no longer exists
+        session.clear()
+        return redirect(url_for("login"))
+
+    return render_template(
+        "profile.html",
+        user=user,
+        stats=get_summary_stats(user_id),
+        transactions=get_recent_transactions(user_id),
+        categories=get_category_breakdown(user_id),
+    )
 
 
 # ------------------------------------------------------------------ #

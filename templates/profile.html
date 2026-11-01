@@ -15,18 +15,18 @@
             <div class="profile-user-details">
                 <h1 class="profile-name" id="profile-name">{{ user.name }}</h1>
                 <p class="profile-email">{{ user.email }}</p>
-                <p class="profile-since">Member since {{ user.member_since|format_date("%B %Y") }}</p>
+                <p class="profile-since">Member since {{ user.member_since }}</p>
             </div>
         </section>
 
         <dl class="profile-stats" aria-label="Spending summary">
             <div class="profile-stat">
                 <dt class="profile-stat-label">Total spent</dt>
-                <dd class="profile-stat-value">{{ stats.total|rupees }}</dd>
+                <dd class="profile-stat-value">{{ stats.total_spent|rupees }}</dd>
             </div>
             <div class="profile-stat">
                 <dt class="profile-stat-label">Transactions</dt>
-                <dd class="profile-stat-value">{{ stats.count }}</dd>
+                <dd class="profile-stat-value">{{ stats.transaction_count }}</dd>
             </div>
             <div class="profile-stat">
                 <dt class="profile-stat-label">Top category</dt>
@@ -60,6 +60,9 @@
                         </tbody>
                     </table>
                 </div>
+                {% if not transactions %}
+                <p class="profile-empty">No transactions yet.</p>
+                {% endif %}
             </section>
 
             <section class="profile-card profile-panel" aria-labelledby="breakdown-title">
@@ -69,14 +72,17 @@
                     <li class="profile-breakdown-row">
                         <div class="profile-breakdown-head">
                             <span class="category-badge category-badge-{{ c.name|lower|replace(' ', '-') }}">{{ c.name }}</span>
-                            <span class="profile-breakdown-amount">{{ c.total|rupees }}
-                                <span class="profile-breakdown-percent">{{ c.percent }}%</span>
+                            <span class="profile-breakdown-amount">{{ c.amount|rupees }}
+                                <span class="profile-breakdown-percent">{{ c.pct }}%</span>
                             </span>
                         </div>
-                        <progress class="profile-meter" value="{{ c.percent }}" max="100" aria-label="{{ c.name }} share of total spending">{{ c.percent }}%</progress>
+                        <progress class="profile-meter" value="{{ c.pct }}" max="100" aria-label="{{ c.name }} share of total spending">{{ c.pct }}%</progress>
                     </li>
                     {% endfor %}
                 </ul>
+                {% if not categories %}
+                <p class="profile-empty">No spending to show yet.</p>
+                {% endif %}
             </section>
 
         </div>
